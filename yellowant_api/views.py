@@ -24,7 +24,7 @@ def request_yellowant_oauth_code(request):
 
     # generate a unique ID to identify the user when YA returns an oauth2 code
     state = str(uuid.uuid4())
-
+    print("Inside request")
     # save the relation between user and state so that we can identify the user when YA returns the
     # oauth2 code
     YellowAntRedirectState.objects.create(user=user, state=state)
@@ -107,6 +107,7 @@ def yellowant_api(request):
 
     # check whether the request is a user command, or a webhook subscription notice from YA
     if data["event_type"] == "command":
+        print(data)
         # request is a user command
 
         # retrieve the user integration id to identify the user
@@ -118,6 +119,9 @@ def yellowant_api(request):
         # any arguments that might be present as an input for the command
         args = data.get("args")
 
+        print(yellowant_integration_id)
+        print(command_name)
+        print(args)
         # create a YA Message object with the help of the YA SDK
         message = CommandCenter(yellowant_integration_id,
                                 command_name, args).parse()

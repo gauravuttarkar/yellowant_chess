@@ -35,8 +35,10 @@ if DJANGO_ENV == "heroku":
     HEROKU_APP_NAME = os.environ.get("HEROKU_APP_NAME")
     BASE_URL = "https://{}.herokuapp.com".format(HEROKU_APP_NAME)
 else:
-    BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
+    BASE_URL = os.environ.get("BASE_URL", "https://d0e6f62c.ngrok.io")
 
+
+BASE_URL = "https://d0e6f62c.ngrok.io"
 # URL to receive oauth2 codes from YA for user authentication. As a developer, you need to provide this URL in the YA
 # developer console so that YA knows exactly where to send the oauth2 codes.
 YA_REDIRECT_URL = "{}/yellowant-oauth-redirect/".format(BASE_URL)
@@ -71,7 +73,7 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     'yellowant_api.apps.YellowantApiConfig',
-    'todo.apps.TodoConfig',
+
     'web.apps.WebConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -92,7 +94,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'yellowant_todoapp.urls'
+ROOT_URLCONF = 'yellowant_chess.urls'
 
 TEMPLATES = [
     {
@@ -110,26 +112,34 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'yellowant_todoapp.wsgi.application'
+WSGI_APPLICATION = 'yellowant_chess.wsgi.application'
 
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
-if DJANGO_ENV == "heroku":
-    import dj_database_url
-
-    DATABASES = {
-        'default': dj_database_url.config(
-            default='sqlite:////{0}'.format(
-                os.path.join(BASE_DIR, 'db.sqlite3'))
-        )
-    }
-else:
-    DATABASES = {
+# if DJANGO_ENV == "heroku":
+#     import dj_database_url
+#
+#     DATABASES = {
+#         'default': dj_database_url.config(
+#             default='sqlite:////{0}'.format(
+#                 os.path.join(BASE_DIR, 'db.sqlite3'))
+#         )
+#     }
+# else:
+DATABASES = {
+        # 'default': {
+        #     'ENGINE': 'django.db.backends.sqlite3',
+        #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        # }
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'chess',
+            'USER': "root",
+            'PASSWORD': "root1234",
+            'HOST': "localhost",
+            'PORT': '',
         }
     }
 

@@ -1,173 +1,251 @@
 """Code which actually takes care of application API calls or other business logic"""
-from yellowant.messageformat import MessageClass
-
-from todo.sdk import TodoSDK
+from yellowant.messageformat import MessageClass, MessageAttachmentsClass, AttachmentFieldsClass ,MessageButtonsClass
+from yellowant_api.models import UserIntegration
+import chess
+import chess.uci
 from yellowant_message_builder.messages import items_message, item_message
 
+MOVE_FLAG = 0
+#0 for White, 1 for Black
 
-def create_item(args, user_integration, message=None):
-    """YellowAnt command to create an item.
+move_dict = {
+    0 : "White",
+    1 : "Black"
+}
 
-    Args:
-        args (dict): Key-value pair of arguments passed from YellowAnt.
-        user_integration (yellowant_api.models.UserIntegration): User integration data.
-        message (MessageClass, optional): Message to add details to.
+def color_inv(c):
+    if c=="w":
+        return "Black"
 
-    Returns:
-        MessageClass: Message containing details of a created item.
-    """
-    message = message or MessageClass()
+    else:
+        return "White"
 
-    # verify arguments
-    title = args.get("title")
-    description = args.get("description")
-    if title is None or not title:
-        # inform the user that they have not provided valid arguments
-        message.message_text = "You need to provide values for both `title` and `description` as arguments."
-        return message
+def color(c):
+    if c=="b":
+        return "Black"
 
-    new_item = TodoSDK(token=user_integration.user.id).create_item(
-        title=title, description=description)
-
-    # build return message for the user
-    message.message_text = "You have created a new item:"
-    message = item_message(new_item, user_integration, message)
-
-    return message
+    else:
+        return "White"
 
 
-def get_list(args, user_integration, message=None): #pylint: disable=unused-argument
-    """YellowAnt command to get a list of todo items of a user.
+def moveFlag(a):
+    global MOVE_FLAG
+    if a==0:
+        MOVE_FLAG=1
+    else:
+        MOVE_FLAG = 1
 
-    Args:
-        args (dict): Key-value pair of arguments passed from YellowAnt.
-        user_integration (yellowant_api.models.UserIntegration): User integration data.
-        message (MessageClass, optional): Message to add details to.
-
-    Returns:
-        MessageClass: Message containing details of a user's todo list.
-    """
-    message = message or MessageClass()
-
-    todo_list = TodoSDK(token=user_integration.user.id).get_list()
-
-    # inform the user if the todo list is empty
-    if not todo_list:
-        message.message_text = "Your todo list is empty"
-        return message
-
-    # create message with the list of todos
-    message.message_text = "Here are your todo items:"
-    message = items_message(todo_list, user_integration, message)
-    return message
+def chooseColor(args,user_integration):
+    m = MessageClass()
+    data = {'list': []}
+    data['list'].append({"Color": "White"})
+    data['list'].append({"Color": "Black"})
+    m.data = data
+    return m
 
 
-def get_item(args, user_integration, message=None):
-    """YellowAnt command to get an item.
 
-    Args:
-        args (dict): Key-value pair of arguments passed from YellowAnt.
-        user_integration (yellowant_api.models.UserIntegration): User integration data.
-        message (MessageClass, optional): Message to add details to.
+def playComputer(args,user_integration):
+    object = UserIntegration.objects.get(yellowant_integration_id=user_integration.yellowant_integration_id)
+    board = chess.Board(object.board_state)
+    engine = chess.uci.popen_engine("/Users/Gaurav/Desktop/Yellowant/chess/Stockfish/src/stockfish")
+    col = color(object.board_state[-12])
+    engine.position(board)
+    move = engine.go(movetime=2000)
+    board.push(chess.Move.from_uci(str(move[0])))
+    m = MessageClass()
+    if board.is_insufficient_material():
+        print("Insufficient material")
+        m.message_text = "Insufficient material"
+        return m
 
-    Returns:
-        MessageClass: Message containing details of an item.
-    """
-    message = message or MessageClass()
+    if board.is_stalemate():
+        print("Stalemate")
+        m.message_text = "Stalemate"
 
-    # verify args
-    try:
-        # since an item's id is supposed to be an integer, we will try casting the argument `id` to an int
-        item_id = int(args.get("id"))
-    except (TypeError, ValueError):
-        # inform the user that they need to provide a valid integer id
-        message.message_text = "You need to provide an integer value for the argument `id`."
-        return message
+    if board.is_checkmate():
+        print("Computer wins")
+        m.message_text = "Checkmate !! \n"+col + " wins"
+        return m
 
-    # inform the user if the item was not found by the id
-    try:
-        item = TodoSDK(token=user_integration.user.id).get_item(id=item_id)
-        # create message for the found item
-        message.message_text = "Here are the item details:"
-        message = item_message(item, user_integration, message)
-    except TodoSDK.DoesNotExist: #pylint: disable=no-member
-        message.message_text = "Could not find todo item with the id: {}".format(
-            item_id)
+    object.board_state = board.fen()
+    object.save()
 
-    return message
+    attachment = MessageAttachmentsClass()
+    attachment.image_url="http://www.fen-to-image.com/image/36/double/coords/"+board.fen()[:-13]
 
+    button = MessageButtonsClass()
+    button.text = "Make move"
+    button.value = "Make move"
+    button.name = "Make move"
+    button.command = {"service_application": str(user_integration.yellowant_integration_id), "function_name": "makemove",\
+                      "inputs": ["move"],
+                      "data" : {"move":"testing"}
+                      }
+    attachment.attach_button(button)
 
-def update_item(args, user_integration, message=None):
-    """YellowAnt command to update an item.
+    button1 = MessageButtonsClass()
+    button1.text = "Play Computer"
+    button1.value = "Play Computer"
+    button1.name = "Play Computer"
+    button1.command = {"service_application": str(user_integration.yellowant_integration_id), "function_name": "playcomputer", \
+                       "data": {"move": "testing"}
+                      }
+    attachment.attach_button(button1)
 
-    Args:
-        args (dict): Key-value pair of arguments passed from YellowAnt.
-        user_integration (yellowant_api.models.UserIntegration): User integration data.
-        message (MessageClass, optional): Message to add details to.
+    m.attach(attachment)
 
-    Returns:
-        MessageClass: Message containing details of a updated item.
-    """
-    message = message or MessageClass()
-
-    # verify args
-    title = args.get("title")
-    description = args.get("description")
-    try:
-        # since an item's id is supposed to be an integer, we will try casting the argument `id` to an int
-        item_id = int(args.get("id"))
-    except (TypeError, ValueError):
-        # inform the user that they need to provide a valid integer id
-        message.message_text = "You need to provide an integer value for the argument `id`."
-        return message
-
-    try:
-        updated_item = TodoSDK(token=user_integration.user.id).update_item(
-            id=item_id, title=title, description=description)
-        # create message with the updated item
-        message.message_text = "Here are the updated item details:"
-        message = item_message(updated_item, user_integration, message)
-    except TodoSDK.DoesNotExist: #pylint: disable=no-member
-        message.message_text = "Could not find todo item with the id: {}".format(
-            item_id)
-
-    return message
+    return m
 
 
-def delete_item(args, user_integration, message=None):
-    """YellowAnt command to delete an item.
 
-    Args:
-        args (dict): Key-value pair of arguments passed from YellowAnt.
-        user_integration (yellowant_api.models.UserIntegration): User integration data.
-        message (MessageClass, optional): Message to add details to.
+def startGame(args,user_integration):
 
-    Returns:
-        MessageClass: Message containing details of the remaining list of todo items.
-    """
-    message = message or MessageClass()
 
-    # verify args
-    try:
-        # since an item's id is supposed to be an integer, we will try casting the argument `id` to an int
-        item_id = int(args.get("id"))
-    except (TypeError, ValueError):
-        # inform the user that they need to provide a valid integer id
-        message.message_text = "You need to provide an integer value for the argument `id`."
-        return message
+    object = UserIntegration.objects.get(yellowant_integration_id=user_integration.yellowant_integration_id)
+    board = chess.Board()
+    object.board_state = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+    object.save()
+    print("inside start game")
+    print(user_integration.id)
+    m = MessageClass()
+    color = args['Color']
+    if color == "White":
+        MOVE_FLAG = 0
+    else:
+        MOVE_FLAG = 1
 
-    try:
-        todo_list = TodoSDK(
-            token=user_integration.user.id).delete_item(id=item_id)
-        # create message with the list of todos
-        if not todo_list:
-            message.message_text = "Your todo list is empty."
-        else:
-            message.message_text = "Here are your todo items:"
-            message = items_message(todo_list, user_integration, message)
-        return message
-    except TodoSDK.DoesNotExist: #pylint: disable=no-member
-        message.message_text = "Could not find todo item with the id: {}".format(
-            item_id)
+    #board = chess.Board()
 
-    return message
+    m.message_text = "You chose " + color
+    attachment = MessageAttachmentsClass()
+
+    print(color + " to move")
+
+    if (color=="Black"):
+        m = playComputer(args,user_integration)
+        return m
+
+    attachment.image_url = "http://www.fen-to-image.com/image/36/double/coords/rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+    field1 = AttachmentFieldsClass()
+    field1.title = "Move"
+    field1.value = move_dict[MOVE_FLAG] + " to move"
+    attachment.attach_field(field1)
+    button = MessageButtonsClass()
+    button.text = "Make move"
+    button.value = "Make move"
+    button.name = "Make move"
+    button.command = {
+        "service_application": str(user_integration.yellowant_integration_id),
+        "function_name": "makemove",
+        "inputs": ["move"],
+        "data": {"move": "testing"},
+    }
+    attachment.attach_button(button)
+
+    button1 = MessageButtonsClass()
+    button1.text = "Play Computer"
+    button1.value = "Play Computer"
+    button1.name = "Play Computer"
+    button1.command = {"service_application": str(user_integration.yellowant_integration_id), "function_name": "playcomputer",
+                       "data": {"move": "testing"},
+                      }
+    attachment.attach_button(button1)
+
+    m.attach(attachment)
+
+
+    #m.image_url = "http://www.fen-to-image.com/image/rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+
+    return m
+
+#
+def showBoard(args,user_integration):
+
+    print(user_integration.yellowant_integration_id)
+    object = UserIntegration.objects.get(yellowant_integration_id=user_integration.yellowant_integration_id)
+    board = chess.Board(object.board_state)
+    print(object.board_state)
+
+    m = MessageClass()
+    m.message_text = color(object.board_state[-12])  + " to move"
+    attachment = MessageAttachmentsClass()
+    attachment.image_url="http://www.fen-to-image.com/image/36/double/coords/"+board.fen()[:-13]
+    button = MessageButtonsClass()
+    button.text = "Make move"
+    button.value = "Make move"
+    button.name = "Make move"
+    button.command = {"service_application": str(user_integration.yellowant_integration_id), "function_name": "makemove",\
+                      "inputs": ["move"],
+                      "data" : {"move":"testing"}
+                      }
+    attachment.attach_button(button)
+    m.attach(attachment)
+
+    return m
+
+
+def makeAMove(args,user_integration):
+
+    print('hello')
+    object = UserIntegration.objects.get(yellowant_integration_id=user_integration.yellowant_integration_id)
+    board = chess.Board(object.board_state)
+    print(args)
+    move = args.get('move')
+
+    m = MessageClass()
+    print(object.board_state)
+    print(object.board_state[-12])
+    col = color_inv(object.board_state[-12])
+    print(col)
+    m.message_text = col + " to move"
+    move_uci = board.parse_san(move)
+    if move_uci in board.legal_moves:
+        board.push_san(move)
+        if board.is_insufficient_material():
+            print("Insufficient material")
+            m.message_text = "Insufficient material"
+
+        if board.is_stalemate():
+            print("Stalemate")
+            m.message_text = "Stalemate"
+        if board.is_checkmate():
+            print(col + " wins")
+            m.message_text = col + " wins"
+
+        object.board_state = board.fen()
+        object.save()
+    else:
+        m.message_text = "Invalid move"
+        return m
+
+
+
+    attachment = MessageAttachmentsClass()
+    button = MessageButtonsClass()
+    button.text = "Make move"
+    button.value = "Make move"
+    button.name = "Make move"
+    button.command = {"service_application": str(user_integration.yellowant_integration_id), "function_name": "makemove",\
+                      "inputs": ["move"],
+                      "data" : {"move":"testing"}
+                      }
+    attachment.attach_button(button)
+
+    button1 = MessageButtonsClass()
+    button1.text = "Play Computer"
+    button1.value = "Play Computer"
+    button1.name = "Play Computer"
+    button1.command = {"service_application": str(user_integration.yellowant_integration_id),
+                      "function_name": "playcomputer",
+                      "data": {"move": "testing"}
+                      }
+    attachment.attach_button(button1)
+
+    attachment.image_url="http://www.fen-to-image.com/image/36/double/coords/"+board.fen()[:-13]
+
+    m.attach(attachment)
+
+    return m
+
+

@@ -37,6 +37,7 @@ class UserIntegration(models.Model):
     yellowant_integration_invoke_name = models.CharField(
         max_length=256, null=False)
     yellowant_integration_token = models.CharField(max_length=2048, null=False)
+    board_state = models.CharField(max_length=2048 , default = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
 
 
 class YellowAntRedirectState(models.Model):

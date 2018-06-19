@@ -36,15 +36,19 @@ class CommandCenter: #pylint: disable=too-few-public-methods
         """
         message = MessageClass()
 
+
         if self.yellowant_integration_id is None:
+
             message.message_text = "Sorry! I could not find your integration."
             return message
 
         elif self.command is None:
+
             message.message_text = "Sorry! I could not find that command."
             return message
 
         # build YA message object
+        #print("Parsing")
         message = self.command(self.args, self.user_integration)
 
         # use inbuilt sdk method to_json to return message in a json format accepted by YA
