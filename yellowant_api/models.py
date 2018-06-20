@@ -38,6 +38,8 @@ class UserIntegration(models.Model):
         max_length=256, null=False)
     yellowant_integration_token = models.CharField(max_length=2048, null=False)
     board_state = models.CharField(max_length=2048 , default = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    opponent_integration_id = models.IntegerField(default=0)
+    playing_state = models.CharField(max_length=2048, null=True, default=None)
 
 
 class YellowAntRedirectState(models.Model):

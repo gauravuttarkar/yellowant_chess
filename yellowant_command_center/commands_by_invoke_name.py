@@ -1,5 +1,6 @@
 """Mapping for command invoke name to logic"""
-from .commands import startGame,chooseColor, showBoard, makeAMove , playComputer
+from .commands import startGame,chooseColor, showBoard, makeAMove , playComputer, playAgainst, accept, startGameAgainstPlayer,\
+                      makeMoveAgainst
 
 
 COMMANDS_BY_INVOKE_NAME = {
@@ -7,5 +8,10 @@ COMMANDS_BY_INVOKE_NAME = {
 "choosecolor" : chooseColor,
 "showboard" : showBoard,
 "makemove" : makeAMove,
-"playcomputer" : playComputer
+"playcomputer" : playComputer,
+"playagainst" : playAgainst,
+"accept" : accept,
+"startgameplayer" : startGameAgainstPlayer,
+"makemoveagainst" : makeMoveAgainst
+
 }
