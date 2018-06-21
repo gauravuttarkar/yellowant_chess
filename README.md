@@ -1,6 +1,6 @@
 # yellowant-sample-django-app
 
-Sample Django application for creating a Todo List Manager for YellowAnt
+Sample Django application for creating a Chess for YellowAnt
 
 ## Zero Config Deploy to Heroku
 

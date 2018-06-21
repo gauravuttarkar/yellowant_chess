@@ -38,6 +38,7 @@ else:
     BASE_URL = os.environ.get("BASE_URL", "https://d0e6f62c.ngrok.io")
 
 
+BASE_HREF = "/"
 BASE_URL = "https://d0e6f62c.ngrok.io"
 # URL to receive oauth2 codes from YA for user authentication. As a developer, you need to provide this URL in the YA
 # developer console so that YA knows exactly where to send the oauth2 codes.
@@ -72,9 +73,9 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
-    'yellowant_api.apps.YellowantApiConfig',
+    'lib.yellowant_api',
 
-    'web.apps.WebConfig',
+    'lib.web',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
