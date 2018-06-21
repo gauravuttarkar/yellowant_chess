@@ -119,17 +119,17 @@ WSGI_APPLICATION = 'yellowant_chess.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
-# if DJANGO_ENV == "heroku":
-#     import dj_database_url
-#
-#     DATABASES = {
-#         'default': dj_database_url.config(
-#             default='sqlite:////{0}'.format(
-#                 os.path.join(BASE_DIR, 'db.sqlite3'))
-#         )
-#     }
-# else:
-DATABASES = {
+if DJANGO_ENV == "heroku":
+    import dj_database_url
+
+    DATABASES = {
+        'default': dj_database_url.config(
+            default='sqlite:////{0}'.format(
+                os.path.join(BASE_DIR, 'db.sqlite3'))
+        )
+    }
+else:
+    DATABASES = {
         # 'default': {
         #     'ENGINE': 'django.db.backends.sqlite3',
         #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
