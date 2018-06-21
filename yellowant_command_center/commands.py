@@ -170,15 +170,18 @@ def playComputer(args,user_integration):
     if board.is_insufficient_material():
         print("Insufficient material")
         m.message_text = "Insufficient material"
+
         return m
 
     if board.is_stalemate():
         print("Stalemate")
         m.message_text = "Stalemate"
 
+
     if board.is_checkmate():
         print("Computer wins")
         m.message_text = "Checkmate !! \n"+col + " wins"
+
         return m
 
     object.board_state = board.fen()
@@ -309,6 +312,9 @@ def makeMoveAgainst(args,user_integration):
     player_object = UserIntegration.objects.get(yellowant_integration_id=user_integration.yellowant_integration_id)
     opponent_object = UserIntegration.objects.get(yellowant_integration_id=player_object.opponent_integration_id)
 
+    access_token = opponent_object.yellowant_integration_token
+    yellowant_user_integration_object = YellowAnt(access_token=access_token)
+
     move = args.get("move")
     board = chess.Board(player_object.board_state)
     col = color_inv(player_object.board_state[-12])
@@ -322,13 +328,29 @@ def makeMoveAgainst(args,user_integration):
         if board.is_insufficient_material():
             print("Insufficient material")
             m.message_text = "Insufficient material"
+            endGame(args, user_integration)
+
+            webhook_message = MessageClass()
+            webhook_field = AttachmentFieldsClass()
+            webhook_field.title = "Result"
+            webhook_field.value = "Game drawn due to insufficient material"
+            attachmentImage = MessageAttachmentsClass()
+            attachmentImage.image_url = IMAGE_URL + board.fen()[:-13]
+            attachmentImage.attach_field(webhook_field)
+            webhook_message.attach(attachmentImage)
+
+
+
+
 
         if board.is_stalemate():
             print("Stalemate")
             m.message_text = "Stalemate"
+            endGame(args, user_integration)
         if board.is_checkmate():
             print(col + " wins")
             m.message_text = col + " wins"
+            endGame(args, user_integration)
 
         player_object.board_state = board.fen()
         opponent_object.board_state = board.fen()
@@ -351,6 +373,7 @@ def makeMoveAgainst(args,user_integration):
     webhook_field.title = "Move"
     webhook_field.value = col + " to move"
     attachmentImage = MessageAttachmentsClass()
+    attachmentImage.attach_field(webhook_field)
     attachmentImage.image_url = IMAGE_URL + board.fen()[:-13]
 
     button = MessageButtonsClass()
@@ -364,10 +387,10 @@ def makeMoveAgainst(args,user_integration):
         "data": {"user_int": player_object.yellowant_integration_id},
     }
     attachmentImage.attach_button(button)
+
     webhook_message.attach(attachmentImage)
 
-    access_token = opponent_object.yellowant_integration_token
-    yellowant_user_integration_object = YellowAnt(access_token=access_token)
+
 
     send_message = yellowant_user_integration_object.create_webhook_message(
         requester_application=opponent_object.yellowant_integration_id,
@@ -544,6 +567,19 @@ def makeAMove(args,user_integration):
     m.attach(attachment)
 
     return m
+
+
+def endGame(args,user_integration):
+    """
+    Function to end the game between two players.
+    """
+
+    player_object = UserIntegration.objects.get(yellowant_integration_id=user_integration.yellowant_integration_id)
+    opponent_object = UserIntegration.objects.get(yellowant_integration_id=player_object.opponent_integration_id)
+    opponent_object.opponent_integration_id = None
+    player_object.opponent_integration_id = None
+
+    return
 
 
 
