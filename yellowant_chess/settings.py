@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 import os
 import json
 
+data = open('yellowant_app_credentials.json').read()
+data_json = json.loads(data)
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -37,23 +39,33 @@ if DJANGO_ENV == "heroku":
 else:
     BASE_URL = os.environ.get("BASE_URL", "https://d0e6f62c.ngrok.io")
 
+# app_name = os.environ.get("HEROKU_APP_NAME")
+# BASE_URL = "https://{}.herokuapp.com".format(app_name)
+ALLOWED_HOSTS = ['*', '{}.herokuapp.com'.format(app_name)]
 
 BASE_HREF = "/"
-BASE_URL = "https://d0e6f62c.ngrok.io"
+SITE_PROTOCOL = "https://"
+
+# BASE_URL = "https://d0e6f62c.ngrok.io"
 # URL to receive oauth2 codes from YA for user authentication. As a developer, you need to provide this URL in the YA
 # developer console so that YA knows exactly where to send the oauth2 codes.
 YA_REDIRECT_URL = "{}/yellowant-oauth-redirect/".format(BASE_URL)
 
 # Numerical ID generated when you register your application through the YA developer console
-YA_APP_ID = CREDENTIALS.get("application_id", None)
-# Client ID generated from the YA developer console. Required to identify requests from this application to YA
-YA_CLIENT_ID = CREDENTIALS.get('client_id')
-# Client secret generated from the YA developer console. Required to identify requests from this application to YA
-YA_CLIENT_SECRET = CREDENTIALS.get('client_secret')
-# Verification token generated from the YA developer console. This application can verify requests from YA as they will
-# carry the verification token
-YA_VERIFICATION_TOKEN = CREDENTIALS.get('verification_token')
+# YA_APP_ID = CREDENTIALS.get("application_id", None)
+# # Client ID generated from the YA developer console. Required to identify requests from this application to YA
+# YA_CLIENT_ID = CREDENTIALS.get('client_id')
+# # Client secret generated from the YA developer console. Required to identify requests from this application to YA
+# YA_CLIENT_SECRET = CREDENTIALS.get('client_secret')
+# # Verification token generated from the YA developer console. This application can verify requests from YA as they will
+# # carry the verification token
+# YA_VERIFICATION_TOKEN = CREDENTIALS.get('verification_token')
 
+
+YA_APP_ID = str(data_json['application_id'])
+YA_CLIENT_ID = str(data_json['client_id'])
+YA_CLIENT_SECRET = str(data_json['client_secret'])
+YA_VERIFICATION_TOKEN = str(data_json['verification_token'])
 ### END YellowAnt specific settings ###
 
 
