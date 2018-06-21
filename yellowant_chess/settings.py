@@ -41,7 +41,7 @@ else:
 
 # app_name = os.environ.get("HEROKU_APP_NAME")
 # BASE_URL = "https://{}.herokuapp.com".format(app_name)
-ALLOWED_HOSTS = ['*', '{}.herokuapp.com'.format(app_name)]
+ALLOWED_HOSTS = ['*']
 
 BASE_HREF = "/"
 SITE_PROTOCOL = "https://"
