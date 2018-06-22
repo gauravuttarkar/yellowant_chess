@@ -161,7 +161,7 @@ def playComputer(args,user_integration):
     """
     object = UserIntegration.objects.get(yellowant_integration_id=user_integration.yellowant_integration_id)
     board = chess.Board(object.board_state)
-    engine = chess.uci.popen_engine(settings.BASE_DIR + "lib/Stockfish2/src/stockfish")
+    engine = chess.uci.popen_engine(settings.BASE_DIR + "/lib/Stockfish2/src/stockfish")
     col = color(object.board_state[-12])
     engine.position(board)
     move = engine.go(movetime=2000)
