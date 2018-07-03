@@ -165,7 +165,7 @@ def playComputer(args,user_integration):
     board = chess.Board(object.board_state)
     dir_path = os.path.dirname(os.path.realpath(__file__))
     print(dir_path)
-    engine = chess.uci.popen_engine("/app/stockfish/Linux/stockfish-9-64")
+    engine = chess.uci.popen_engine("/app/stockfish/Linux/stockfish-9")
     col = color(object.board_state[-12])
     engine.position(board)
     move = engine.go(movetime=2000)
