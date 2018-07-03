@@ -1,4 +1,4 @@
-sudo apt-get install git g++
+apt-get install git g++
 echo "Hello"
 cd /app/Stockfish-master/src
 make help
