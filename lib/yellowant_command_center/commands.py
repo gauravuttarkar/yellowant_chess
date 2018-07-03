@@ -6,6 +6,7 @@ import chess
 import chess.uci
 import uuid
 from yellowant import YellowAnt
+import os
 from django.conf import settings
 
 
@@ -162,7 +163,9 @@ def playComputer(args,user_integration):
     """
     object = UserIntegration.objects.get(yellowant_integration_id=user_integration.yellowant_integration_id)
     board = chess.Board(object.board_state)
-    engine = chess.uci.popen_engine(".../Stockfish/src/stockfish")
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    print(dir_path)
+    engine = chess.uci.popen_engine("app/lib/Stockfish/src/stockfish")
     col = color(object.board_state[-12])
     engine.position(board)
     move = engine.go(movetime=2000)
