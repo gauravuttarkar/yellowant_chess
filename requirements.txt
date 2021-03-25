@@ -11,7 +11,7 @@ psycopg2==2.7.5
 pyaml==17.12.1
 python-chess==0.23.6
 pytz==2018.4
-PyYAML==3.12
+PyYAML==5.4
 requests==2.19.1
 requests-oauthlib==1.0.0
 six==1.11.0
